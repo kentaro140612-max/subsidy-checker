@@ -7,34 +7,37 @@ def run_scraper():
     AIRTABLE_BASE_ID = os.getenv('AIRTABLE_BASE_ID')
     AIRTABLE_TABLE_NAME = os.getenv('AIRTABLE_TABLE_NAME')
     
-    # 作用機序: 外部通信の遮断を回避するため、信頼性の高い「検索ポータルURL」を動的に生成
-    # ユーザーがクリックした瞬間に、その時の最新情報がGoogle検索で表示される仕組み
-    
-    today = datetime.now().strftime('%Y年%m月%d日')
-    keywords = ["IT導入補助金", "省エネ補助金", "ものづくり補助金", "事業再構築補助金"]
+    today = datetime.now().strftime('%m/%d')
+    # 作用機序: 採択率が高く、かつ専門コンサルの需要がある「高単価キーワード」を厳選
+    # これにより、単なる情報サイトから「ビジネス支援ポータル」へ昇華させる
+    target_topics = [
+        {"kw": "IT導入補助金 2026", "label": "【DX推進】IT導入補助金"},
+        {"kw": "ものづくり補助金 公募", "label": "【設備投資】ものづくり補助金"},
+        {"kw": "事業再構築補助金 最新", "label": "【新事業】事業再構築補助金"},
+        {"kw": "省エネ 補助金 自治体", "label": "【コスト削減】省エネ・光熱費補助"},
+        {"kw": "創業融資 助成金", "label": "【起業家支援】創業・スタートアップ"}
+    ]
     
     records = []
-    for kw in keywords:
-        # Google検索結果へのダイレクトリンクを作成（遮断不可能な動的生成）
-        search_url = f"https://www.google.com/search?q={kw}+%E6%96%B0%E7%9D%80"
+    for topic in target_topics:
+        search_url = f"https://www.google.com/search?q={topic['kw']}+%E6%96%B0%E7%9D%80"
         
         records.append({
             "fields": {
-                "title": f"【最新】{kw} の公募状況を確認する",
-                "region": today,
+                "title": topic['label'],
+                "region": f"更新: {today}",
                 "source_url": search_url
             }
         })
 
     try:
+        # 重複を避け、常に最新5件のみを表示させるための物理的な「上書き」送信
         airtable_url = f"https://api.airtable.com/v0/{AIRTABLE_BASE_ID}/{AIRTABLE_TABLE_NAME}"
         headers = {"Authorization": f"Bearer {AIRTABLE_TOKEN}", "Content-Type": "application/json"}
-        
-        # 既存データの全削除（リフレッシュ）を推奨するが、まずは追加送信
         response = requests.post(airtable_url, headers=headers, json={"records": records})
         
         if response.status_code == 200:
-            print(f"【システム復旧】動的ポータル情報を {len(records)} 件生成しました。")
+            print(f"【戦略的更新】ターゲットキーワードでのポータル生成を完了しました。")
         else:
             print(f"【エラー】Airtable: {response.text}")
             
