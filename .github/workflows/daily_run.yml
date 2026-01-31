@@ -8,7 +8,6 @@ on:
 jobs:
   update-data:
     runs-on: ubuntu-latest
-    # 【最優先事項】OIDCトークン発行のために必須の権限
     permissions:
       contents: read
       id-token: write
@@ -17,53 +16,70 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 1. Google Cloud 認証ステップ（Workload Identity）
       - name: Google Auth
         uses: google-github-actions/auth@v2
         with:
           workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
           service_account: ${{ secrets.GCP_SERVICE_ACCOUNT_EMAIL }}
+          create_credentials_file: true
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.10'
 
-      # 2. 必要なライブラリのインストール
       - name: Install dependencies
-        run: pip install requests google-api-python-client oauth2client
+        run: pip install requests google-api-python-client oauth2client beautifulsoup4 lxml
 
-      - name: Run script with error handling and logs
+      - name: Run Indexing API with Sitemap Analysis
         env:
           AIRTABLE_API_KEY: ${{ secrets.AIRTABLE_API_KEY }}
           AIRTABLE_BASE_ID: ${{ secrets.AIRTABLE_BASE_ID }}
+          # 【重要】あなたのサイトマップURLに書き換えてください
+          SITEMAP_URL: "https://your-site.com/sitemap.xml"
         run: |
           python -c "
           import os
           import datetime
           import sys
+          import requests
+          from bs4 import BeautifulSoup
+          from google.oauth2 import service_account
+          from googleapiclient.discovery import build
 
           def run_update():
               try:
-                  # 1. 依存関係と環境変数のチェック
-                  print(f'[{datetime.datetime.now()}] Starting daily run...')
-                  api_key = os.environ.get('AIRTABLE_API_KEY')
-                  if not api_key:
-                      raise ValueError('Missing AIRTABLE_API_KEY')
-                  print('Check: API Key found.')
+                  print(f'[{datetime.datetime.now()}] Starting Indexing API process...')
+                  
+                  # 1. サイトマップからのURL抽出
+                  sitemap_url = os.environ.get('SITEMAP_URL')
+                  res = requests.get(sitemap_url, timeout=30)
+                  res.raise_for_status()
+                  soup = BeautifulSoup(res.content, 'xml')
+                  
+                  # 200件制限を考慮し、最新の100件を抽出（削除は行わない）
+                  urls = [loc.text for loc in soup.find_all('loc')][:100]
+                  print(f'Detected {len(urls)} URLs from sitemap.')
 
-                  # 2. 物理定数・単位のシミュレーション（例：補助金額の計算など）
-                  raw_value = 100000 # SI単位系（円）
-                  tax_rate = 0.1
-                  final_value = raw_value * (1 + tax_rate)
-                  print(f'Calculation Step: {raw_value} * (1 + {tax_rate}) = {final_value}')
+                  # 2. Google API 認証
+                  creds_path = os.environ.get('GOOGLE_APPLICATION_CREDENTIALS')
+                  scopes = ['https://www.googleapis.com/auth/indexing']
+                  credentials = service_account.Credentials.from_service_account_file(creds_path, scopes=scopes)
+                  service = build('indexing', 'v1', credentials=credentials)
 
-                  # 3. 実行メイン（実際のスクリプト呼び出し）
-                  # ここで main.py 等を呼び出す、またはここにAPI送信コードを記述
-                  print('Main process completed successfully.')
+                  # 3. 各URLの通知実行
+                  for url in urls:
+                      try:
+                          body = {'url': url, 'type': 'URL_UPDATED'}
+                          service.urlNotifications().publish(body=body).execute()
+                          print(f'Success: {url}')
+                      except Exception as e:
+                          print(f'Failed to notify {url}: {e}')
+
+                  print('Daily Indexing process completed successfully.')
 
               except Exception as e:
-                  print(f'Error occurred: {str(e)}')
+                  print(f'Fatal Error: {str(e)}')
                   sys.exit(1)
 
           run_update()
