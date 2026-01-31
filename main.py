@@ -27,9 +27,6 @@ def fetch_data():
         return []
 
 def generate_html(subsidies):
-    """
-    色彩、文言、情報の網羅性のすべてを論理的に最適化した最終出力
-    """
     list_items = ""
     for item in subsidies:
         list_items += f"""
@@ -38,10 +35,19 @@ def generate_html(subsidies):
             <a href="{item['link']}" target="_blank" style="background-color:#2B6CB0 !important; color:#FFFFFF !important; padding:14px 28px; text-decoration:none; border-radius:8px; font-size:0.95rem; font-weight:bold; display:inline-block;">詳細を確認する (J-Net21)</a>
         </div>"""
     
-    html_content = f"""<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>補助金速報</title></head>
-<body style="max-width:640px; margin:0 auto; background-color:#F8FAFC; padding:40px 20px; font-family:sans-serif;">
+    # SEOメタデータの強化
+    desc = "J-Net21の最新補助金情報を毎日自動更新。中小企業・個人事業主向けの公募情報を最速で確認。 "
+    
+    html_content = f"""<!DOCTYPE html><html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="{desc}">
+    <title>補助金速報 | J-Net21最新公募情報まとめ</title>
+</head>
+<body style="max-width:640px; margin:0 auto; background-color:#F8FAFC; padding:40px 20px; font-family:sans-serif; color:#1A202C;">
     <header style="margin-bottom:40px; border-left:6px solid #2B6CB0; padding-left:20px;">
-        <h1 style="font-size:2rem; margin:0; color:#1A202C; letter-spacing:-0.03em;">補助金速報</h1>
+        <h1 style="font-size:2rem; margin:0; letter-spacing:-0.02em;">補助金速報</h1>
         <p style="font-size:1rem; color:#718096; margin-top:10px;">J-Net21 公募情報：最新30件を同期中</p>
     </header>
     <main style="background-color:#FFFFFF; padding:10px 30px; border-radius:16px; border:1px solid #E2E8F0; box-shadow:0 4px 12px rgba(0,0,0,0.05);">
