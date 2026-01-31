@@ -1,10 +1,11 @@
 import os
 import requests
 from bs4 import BeautifulSoup
-from datetime import datetime
+from datetime import datetime, timedelta
 from openai import OpenAI
 import re
 import hashlib
+import glob
 
 # 日本標準時
 now_dt = datetime.now()
@@ -12,8 +13,19 @@ now = now_dt.strftime('%Y年%m月%d日 %H:%M')
 sitemap_date = now_dt.strftime('%Y-%m-%d')
 client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 
-# 物理ディレクトリ作成
 os.makedirs("articles", exist_ok=True)
+
+def cleanup_old_files():
+    """日本語名の旧ファイルや不要なファイルを物理削除する"""
+    files = glob.glob("articles/*.html")
+    for f in files:
+        filename = os.path.basename(f)
+        # 英数字12文字+アンダースコア+数字 以外の形式（古い日本語名など）を削除
+        if not re.match(r'^[a-f0-9]{12}_\d+\.html$', filename):
+            try:
+                os.remove(f)
+                print(f"DELETED: {filename}")
+            except: pass
 
 def ai_analyze(title):
     try:
@@ -37,15 +49,19 @@ def ai_analyze(title):
         amount = res_text.split("金額：")[1].split("スコア：")[0].strip()
         score = res_text.split("スコア：")[1].strip()
         return cat, summary, amount, score
-    except Exception:
+    except:
         return "その他", "公式資料を確認してください。", "要確認", "★★★"
 
 def generate_individual_page(item, cat, summary, amount, score, file_id):
     file_path = f"articles/{file_id}.html"
+    # 簡易アーカイブ警告（3日以上前の記事に表示する想定のロジック基盤）
+    warning_html = '<div style="background:#fff3e0; border:1px solid #ffe0b2; padding:10px; border-radius:5px; margin-bottom:20px; font-size:0.8rem; color:#e65100;">⚠️ この情報は公開から時間が経過しています。最新の募集状況は必ず公式資料をご確認ください。</div>'
+    
     html = f"""<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>{item['title']}</title></head>
 <body style="max-width:600px; margin:0 auto; padding:40px 20px; font-family:sans-serif; line-height:1.6; color:#333; background:#f9f9f9;">
     <a href="../index.html" style="color:#1a73e8; text-decoration:none;">← 一覧へ戻る</a>
     <p style="font-size:0.8rem; color:#666; margin-top:20px;">更新日：{now}</p>
+    {warning_html}
     <div style="display:inline-block; background:#1a73e8; color:#fff; font-size:0.7rem; padding:2px 8px; border-radius:4px;">{cat}</div>
     <h1 style="font-size:1.4rem; margin-top:10px;">{item['title']}</h1>
     <div style="background:#fff; padding:20px; border-radius:10px; border:1px solid #eee; margin-bottom:20px;">
@@ -60,11 +76,11 @@ def generate_individual_page(item, cat, summary, amount, score, file_id):
     return file_path
 
 def generate_html(subsidies):
+    cleanup_old_files() # 実行前に掃除
     list_items = ""
     article_urls = []
     for i, item in enumerate(subsidies):
         cat, summary, amount, score = ai_analyze(item['title'])
-        # 衝突を避けるハッシュ値URL
         file_id = hashlib.md5(item['title'].encode()).hexdigest()[:12] + f"_{i}"
         page_path = generate_individual_page(item, cat, summary, amount, score, file_id)
         article_urls.append(page_path)
@@ -88,18 +104,14 @@ def generate_html(subsidies):
     <main>{list_items}</main>
 </body></html>"""
     
-    with open("index.html", "w", encoding="utf-8") as f:
-        f.write(html_content)
+    with open("index.html", "w", encoding="utf-8") as f: f.write(html_content)
     
-    # Sitemap生成
     base_url = "https://smart-guidance-lab.github.io/hojokin-navi/"
     s_lines = ['<?xml version="1.0" encoding="UTF-8"?>', '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">']
     s_lines.append(f'  <url><loc>{base_url}index.html</loc><lastmod>{sitemap_date}</lastmod><priority>1.0</priority></url>')
-    for u in article_urls:
-        s_lines.append(f'  <url><loc>{base_url}{u}</loc><lastmod>{sitemap_date}</lastmod><priority>0.8</priority></url>')
+    for u in article_urls: s_lines.append(f'  <url><loc>{base_url}{u}</loc><lastmod>{sitemap_date}</lastmod><priority>0.8</priority></url>')
     s_lines.append('</urlset>')
-    with open("sitemap.xml", "w", encoding="utf-8") as f:
-        f.write("\n".join(s_lines))
+    with open("sitemap.xml", "w", encoding="utf-8") as f: f.write("\n".join(s_lines))
 
 def fetch_data():
     url = "https://j-net21.smrj.go.jp/snavi/articles"
