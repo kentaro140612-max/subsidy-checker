@@ -36,6 +36,7 @@ def ai_analyze(title):
 
 def generate_individual_page(item, summary, amount, score, tags, file_id):
     file_path = f"articles/{file_id}.html"
+    tag_html = "".join([f'<span style="background:#eee; padding:2px 8px; margin-right:5px; border-radius:5px;">#{t.strip()}</span>' for t in tags.split(",")])
     html = f"""<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>{item['title']} | AI補助金ナビ</title></head>
     <body style="max-width:600px; margin:0 auto; padding:40px 20px; font-family:sans-serif; line-height:1.6; color:#333; background:#f9f9f9;">
         <a href="../index.html" style="color:#1a73e8; text-decoration:none;">← 一覧へ戻る</a>
@@ -57,18 +58,16 @@ def generate_individual_page(item, summary, amount, score, tags, file_id):
     return file_path
 
 def generate_sitemap(urls):
-    """Google用のsitemap.xmlを生成"""
     base_url = "https://smart-guidance-lab.github.io/hojokin-navi/"
-    sitemap_content = '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
-    # TOPページ
-    sitemap_content += f'  <url><loc>{base_url}index.html</loc><lastmod>{sitemap_date}</lastmod><priority>1.0</priority></url>\n'
-    # 各記事ページ
+    lines = ['<?xml version="1.0" encoding="UTF-8"?>', '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">']
+    lines.append(f'  <url><loc>{base_url}index.html</loc><lastmod>{sitemap_date}</lastmod><priority>1.0</priority></url>')
     for url in urls:
         full_url = f"{base_url}{url}"
-        sitemap_content += f'  <url><loc>{full_url}</loc><lastmod>{sitemap_date}</lastmod><priority>0.8</priority></url>\n'
-    sitemap_content += '</urlset>'
+        lines.append(f'  <url><loc>{full_url}</loc><lastmod>{sitemap_date}</lastmod><priority>0.8</priority></url>')
+    lines.append('</urlset>')
     with open("sitemap.xml", "w", encoding="utf-8") as f:
-        f.write(sitemap_content)
+        f.write("\n".join(lines))
+    print("DEBUG: sitemap.xml has been generated.")
 
 def generate_html(subsidies):
     list_items = ""
@@ -78,7 +77,6 @@ def generate_html(subsidies):
         file_id = re.sub(r'[^\w\s-]', '', item['title'])[:20].strip().replace(' ', '_') + f"_{i}"
         page_path = generate_individual_page(item, summary, amount, score, tags, file_id)
         article_urls.append(page_path)
-        
         list_items += f"""
         <article style="border: 1px solid #eee; padding: 25px; margin-bottom: 25px; border-radius: 15px; background: #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
             <p style="font-size:0.7rem; color:#5f6368; margin-bottom:5px;">更新：{now}</p>
@@ -89,7 +87,6 @@ def generate_html(subsidies):
                 <a href="{item['link']}" target="_blank" style="flex:1; text-align:center; background:#1a73e8; color:#fff; padding:10px; text-decoration:none; border-radius:5px; font-size:0.8rem;">公式資料</a>
             </div>
         </article>"""
-    
     html_content = f"""<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="google-site-verification" content="qDKunZB9hZN753KuLftIbJUXeWBi3bA-HfSS-gej1KA" />
     <meta name="description" content="AIが最新の補助金情報を要約。最短1分で自分に合った補助金が見つかる。"><title>AI補助金ナビ | smart-guidance-lab</title></head>
@@ -101,7 +98,6 @@ def generate_html(subsidies):
             <p>【免責事項】本サイトはAIを用いて情報を自動収集・要約しています。正確な情報は必ず公式資料をご確認ください。</p>
         </footer>
     </body></html>"""
-    
     with open("index.html", "w", encoding="utf-8") as f:
         f.write(html_content)
     generate_sitemap(article_urls)
