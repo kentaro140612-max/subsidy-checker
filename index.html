@@ -1,81 +1,102 @@
 <!DOCTYPE html><html lang="ja">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SUBSIDY ARCHIVE</title>
+<title>補助金・助成金データベース</title>
 <style>
-    :root { --bg: #ffffff; --text: #000000; --accent: #000000; --dim: #707070; --border: #eeeeee; }
-    body { margin: 0; font-family: "Helvetica Neue", Arial, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
-    .container { max-width: 800px; margin: 0 auto; padding: 60px 24px; }
-    header { border-bottom: 4px solid var(--accent); padding-bottom: 40px; margin-bottom: 60px; }
-    h1 { font-size: 2.5rem; font-weight: 900; letter-spacing: -0.05em; margin: 0; }
-    .stats { font-size: 0.9rem; font-weight: 600; color: var(--dim); margin-top: 10px; text-transform: uppercase; }
-    .item { padding: 32px 0; border-bottom: 1px solid var(--border); transition: 0.2s; }
-    .item:hover { border-bottom-color: var(--accent); }
-    time { font-size: 0.8rem; font-weight: 700; color: var(--dim); display: block; }
-    h2 { font-size: 1.25rem; font-weight: 700; margin: 8px 0 24px 0; letter-spacing: -0.01em; }
-    a { display: inline-block; background: var(--accent); color: #fff; text-decoration: none; padding: 12px 32px; font-size: 0.75rem; font-weight: 900; letter-spacing: 0.1em; }
-    footer { margin-top: 100px; padding: 40px 0; border-top: 1px solid var(--border); font-size: 0.7rem; color: var(--dim); text-align: center; }
+    :root { --bg: #F7FAFC; --surface: #FFFFFF; --text: #2D3748; --accent: #1A365D; --dim: #718096; --border: #E2E8F0; }
+    body { margin: 0; font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; word-wrap: break-word; }
+    .container { max-width: 680px; margin: 0 auto; padding: 40px 20px; }
+    header { background: var(--surface); padding: 30px; border-radius: 12px; border-left: 8px solid var(--accent); box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 40px; }
+    h1 { font-size: 1.6rem; font-weight: 800; color: var(--accent); margin: 0; letter-spacing: -0.02em; }
+    .stats { font-size: 0.85rem; color: var(--dim); margin-top: 10px; font-weight: 600; }
+    .item { background: var(--surface); padding: 30px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 20px; transition: transform 0.2s ease; }
+    .item:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
+    time { font-size: 0.8rem; font-weight: 700; color: var(--accent); opacity: 0.8; display: block; }
+    h2 { font-size: 1.1rem; font-weight: 700; margin: 10px 0 20px 0; line-height: 1.5; color: var(--text); }
+    .btn-area { text-align: right; }
+    a { display: inline-block; background: var(--accent); color: #ffffff; text-decoration: none; padding: 12px 30px; font-size: 0.85rem; font-weight: 700; border-radius: 6px; }
+    footer { margin-top: 60px; padding: 40px 0; font-size: 0.75rem; color: var(--dim); text-align: center; }
 </style>
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>SUBSIDY<br>ARCHIVE</h1>
-            <div class="stats">System Status: Functional / Records: 10 / Location: Japan</div>
+            <h1>補助金・助成金アーカイブ</h1>
+            <div class="stats">蓄積データ: 10 件 / 毎日自動更新</div>
         </header>
         <main>
         <section class="item">
             <time>2026-01-31</time>
             <h2>セミナー・イベント：「No.05 若手リーダー研修【7月・午後】」</h2>
-            <a href="https://j-net21.smrj.go.jp/snavi/articles/174868" target="_blank" rel="noopener">ACCESS DATA</a>
+            <div class="btn-area">
+                <a href="https://j-net21.smrj.go.jp/snavi/articles/174868" target="_blank" rel="noopener">詳細を確認する</a>
+            </div>
         </section>
         <section class="item">
             <time>2026-01-31</time>
             <h2>セミナー・イベント：「No.128 倉庫・物流センターの現場力を強化！【7月・午後】」</h2>
-            <a href="https://j-net21.smrj.go.jp/snavi/articles/174867" target="_blank" rel="noopener">ACCESS DATA</a>
+            <div class="btn-area">
+                <a href="https://j-net21.smrj.go.jp/snavi/articles/174867" target="_blank" rel="noopener">詳細を確認する</a>
+            </div>
         </section>
         <section class="item">
             <time>2026-01-31</time>
             <h2>セミナー・イベント：「No.95 設備投資における「財務の基礎知識」【7月・全日】」</h2>
-            <a href="https://j-net21.smrj.go.jp/snavi/articles/174865" target="_blank" rel="noopener">ACCESS DATA</a>
+            <div class="btn-area">
+                <a href="https://j-net21.smrj.go.jp/snavi/articles/174865" target="_blank" rel="noopener">詳細を確認する</a>
+            </div>
         </section>
         <section class="item">
             <time>2026-01-31</time>
             <h2>セミナー・イベント：「No.45 職場リーダーのためのチームマネジメント講座【7月・午前】」</h2>
-            <a href="https://j-net21.smrj.go.jp/snavi/articles/174863" target="_blank" rel="noopener">ACCESS DATA</a>
+            <div class="btn-area">
+                <a href="https://j-net21.smrj.go.jp/snavi/articles/174863" target="_blank" rel="noopener">詳細を確認する</a>
+            </div>
         </section>
         <section class="item">
             <time>2026-01-31</time>
             <h2>セミナー・イベント：「No.74 社員が育つ！人事評価制度の活かし方【7月・午後】」</h2>
-            <a href="https://j-net21.smrj.go.jp/snavi/articles/174861" target="_blank" rel="noopener">ACCESS DATA</a>
+            <div class="btn-area">
+                <a href="https://j-net21.smrj.go.jp/snavi/articles/174861" target="_blank" rel="noopener">詳細を確認する</a>
+            </div>
         </section>
         <section class="item">
             <time>2026-01-31</time>
             <h2>セミナー・イベント：「No.94 儲けの元がわかるセグメント別損益の活用法【7月・全日】」</h2>
-            <a href="https://j-net21.smrj.go.jp/snavi/articles/174860" target="_blank" rel="noopener">ACCESS DATA</a>
+            <div class="btn-area">
+                <a href="https://j-net21.smrj.go.jp/snavi/articles/174860" target="_blank" rel="noopener">詳細を確認する</a>
+            </div>
         </section>
         <section class="item">
             <time>2026-01-31</time>
             <h2>セミナー・イベント：「No.67 生成AIを活用した事業計画策定講座【7月・午後】」</h2>
-            <a href="https://j-net21.smrj.go.jp/snavi/articles/174859" target="_blank" rel="noopener">ACCESS DATA</a>
+            <div class="btn-area">
+                <a href="https://j-net21.smrj.go.jp/snavi/articles/174859" target="_blank" rel="noopener">詳細を確認する</a>
+            </div>
         </section>
         <section class="item">
             <time>2026-01-31</time>
             <h2>セミナー・イベント：「No.66 生成AIを活用した事業計画策定講座【7月・午前】」</h2>
-            <a href="https://j-net21.smrj.go.jp/snavi/articles/174858" target="_blank" rel="noopener">ACCESS DATA</a>
+            <div class="btn-area">
+                <a href="https://j-net21.smrj.go.jp/snavi/articles/174858" target="_blank" rel="noopener">詳細を確認する</a>
+            </div>
         </section>
         <section class="item">
             <time>2026-01-31</time>
             <h2>セミナー・イベント：「No.108 新商品開発に役立つアイデア発想トレーニング【7月・午前】」</h2>
-            <a href="https://j-net21.smrj.go.jp/snavi/articles/174856" target="_blank" rel="noopener">ACCESS DATA</a>
+            <div class="btn-area">
+                <a href="https://j-net21.smrj.go.jp/snavi/articles/174856" target="_blank" rel="noopener">詳細を確認する</a>
+            </div>
         </section>
         <section class="item">
             <time>2026-01-31</time>
             <h2>セミナー・イベント：「No.109 新商品開発に役立つアイデア発想トレーニング【7月・午後】」</h2>
-            <a href="https://j-net21.smrj.go.jp/snavi/articles/174855" target="_blank" rel="noopener">ACCESS DATA</a>
+            <div class="btn-area">
+                <a href="https://j-net21.smrj.go.jp/snavi/articles/174855" target="_blank" rel="noopener">詳細を確認する</a>
+            </div>
         </section></main>
         <footer>
-            GENERATED BY AUTOMATED INTELLIGENCE SYSTEM / LAST SYNC: 2026-01-31T11:24:35.409615
+            AUTOMATED DATABASE SYSTEM<br>最終更新: 2026年01月31日 11:31
         </footer>
     </div>
 </body></html>
