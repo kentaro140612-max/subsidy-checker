@@ -2,11 +2,11 @@ name: Auto Update Subsidy Database
 
 on:
   schedule:
-    - cron: '0 0 * * *' # 毎日日本時間午前9時（UTC 0時）に実行
+    - cron: '0 0 * * *' # 毎日日本時間午前9時
   workflow_dispatch:      # 手動実行ボタンを有効化
 
 permissions:
-  contents: write         # リポジトリへの書き込み権限を明示的に許可
+  contents: write         # 書き込み権限を物理的に許可
 
 jobs:
   build_and_deploy:
@@ -31,9 +31,15 @@ jobs:
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
-          git add subsidies_db.json index.html
-          # 変更がある場合のみコミットしてプッシュ
+          
+          # ファイルが存在する場合のみaddを実行し、pathspecエラーを物理的に回避
+          if [ -f subsidies_db.json ]; then git add subsidies_db.json; fi
+          if [ -f index.html ]; then git add index.html; fi
+          
+          # 変更（ステージングされたファイル）がある場合のみコミット
           if ! git diff --cached --exit-code; then
             git commit -m "chore: auto-update database [$(date +'%Y-%m-%d')]"
             git push
+          else
+            echo "No changes to commit. Database is already up to date."
           fi
