@@ -14,10 +14,10 @@ def ai_analyze(title):
             model="gpt-4o-mini",
             messages=[
                 {"role": "system", "content": """補助金タイトルを分析し、SEOを意識して出力せよ。
-1. 要約：(30文字以内の概要。検索意図に沿った言葉選び)
+1. 要約：(30文字以内の概要)
 2. 金額：(最大◯◯万円、または要確認)
 3. スコア：(★1-5)
-4. タグ：(業種や目的。例：IT導入, 創業, 製造業など、コンマ区切り3つ)"""},
+4. タグ：(業種や目的。例：IT導入, 創業など、コンマ区切り3つ)"""},
                 {"role": "user", "content": title}
             ],
             max_tokens=300
@@ -35,9 +35,13 @@ def ai_analyze(title):
 def generate_html(subsidies):
     list_items = ""
     for item in subsidies:
-        summary, amount, score = ai_analyze(item['title'])
+        summary, amount, score, tags = ai_analyze(item['title'])
+        # タグを可視化し、SEOキーワードをページ内に配置
+        tag_html = "".join([f'<span style="font-size:0.7rem; background:#eee; padding:2px 6px; margin-right:5px; border-radius:3px; color:#666;">#{t.strip()}</span>' for t in tags.split(",")])
+        
         list_items += f"""
         <article style="border: 1px solid #eee; padding: 25px; margin-bottom: 25px; border-radius: 15px; background: #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+            <div style="margin-bottom: 8px;">{tag_html}</div>
             <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 12px;">
                 <h2 style="color: #1a73e8; font-size: 1.1rem; margin: 0; flex: 1; padding-right: 10px;">{item['title']}</h2>
                 <span style="color: #e65100; font-weight: bold; white-space: nowrap;">{score}</span>
@@ -49,7 +53,7 @@ def generate_html(subsidies):
             <a href="{item['link']}" target="_blank" style="display: block; text-align: center; background: #1a73e8; color: #fff; padding: 12px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 0.9rem;">公式資料を詳しく見る</a>
         </article>"""
     
-    html_content = f"""<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>AI補助金ナビ</title></head><body style="max-width: 600px; margin: 0 auto; background: #f1f3f4; padding: 20px; font-family: sans-serif;"><h1>AI補助金ナビ</h1><p style="color: #5f6368; font-size: 0.8rem; margin-bottom: 30px;">最終更新：{now}</p><main>{list_items}</main><footer style="margin-top: 50px; padding-top: 20px; border-top: 1px solid #ccc; color: #70757a; font-size: 0.75rem; line-height: 1.6;"><p>【免責事項】<br>本サイトはAIを用いて情報を自動収集・要約しています。正確な情報は必ずリンク先の公式資料をご確認ください。本サイトの情報を利用したことによる損害について、当方は一切の責任を負いません。</p></footer></body></html>"""
+    html_content = f"""<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="description" content="AIが最新の補助金情報を要約。最短1分で自分に合った補助金が見つかる。"><title>AI補助金ナビ | smart-guidance-lab</title></head><body style="max-width: 600px; margin: 0 auto; background: #f1f3f4; padding: 20px; font-family: sans-serif;"><h1>AI補助金ナビ</h1><p style="color: #5f6368; font-size: 0.8rem; margin-bottom: 30px;">最終更新：{now}</p><main>{list_items}</main><footer style="margin-top: 50px; padding-top: 20px; border-top: 1px solid #ccc; color: #70757a; font-size: 0.75rem; line-height: 1.6;"><p>【免責事項】<br>本サイトはAIを用いて情報を自動収集・要約しています。正確な情報は必ずリンク先の公式資料をご確認ください。</p></footer></body></html>"""
     
     with open("index.html", "w", encoding="utf-8") as f:
         f.write(html_content)
@@ -67,18 +71,12 @@ def fetch_data():
         href = a.get('href')
         if len(title) > 5 and title not in seen_titles:
             full_url = href if href.startswith('http') else "https://j-net21.smrj.go.jp" + href
-            # 修正箇所: {{ }} を { } に修正
             data.append({"title": title, "link": full_url})
             seen_titles.add(title)
-            if len(data) >= 5: break
+            if len(data) >= 10: break # インデックス数確保のため取得件数を10件に増量
     return data
 
 if __name__ == "__main__":
-    try:
-        subsidies = fetch_data()
-        if subsidies:
-            generate_html(subsidies)
-        else:
-            print("No articles found.")
-    except Exception as e:
-        print(f"Error: {e}")
+    subsidies = fetch_data()
+    if subsidies:
+        generate_html(subsidies)
