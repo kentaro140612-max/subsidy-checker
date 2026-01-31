@@ -1,73 +1,74 @@
-import os, hashlib, json, re
+import os, hashlib, json, re, requests
+from bs4 import BeautifulSoup
 from openai import OpenAI
 
 # 構成設定
 SOURCE_NAME = "J-Net21"
 client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 
-def get_visual_meta(amount_str, category):
+def ai_analyze_minimal(title):
     """
-    Python側で物理的に『色』と『アイコン』を決定し、インラインCSSとして返す。
+    推論を極限まで単純化。バッジの『テキスト』のみを生成させる。
     """
-    # 1. アイコン判定
-    icon_map = {"IT・DX": "💻", "製造・建設": "🏗️", "商業・サービス": "🛍️", "その他": "💡"}
-    icon = icon_map.get(category, "💡")
-
-    # 2. 数値抽出ロジック（万単位に正規化）
-    num_match = re.search(r'(\d+)', amount_str)
-    val = int(num_match.group(1)) if num_match else 0
-    if "万" not in amount_str and val > 10000:
-        val = val // 10000
-
-    # 3. 規模別カラー判定（物理的16進数）
-    if val >= 500:
-        return icon, "大規模", "#6B46C1" # 紫
-    elif val >= 100:
-        return icon, "中規模", "#2B6CB0" # 青
-    else:
-        return icon, "少額支援", "#2F855A" # 緑
-
-def ai_analyze(title):
     try:
         response = client.chat.completions.create(
             model="gpt-4o-mini",
             response_format={"type": "json_object"},
             messages=[
-                {"role": "system", "content": '{"cat":"IT・DX or 製造・建設 or 商業・サービス or その他", "amount":"〜〇〇万円"}'},
+                {"role": "system", "content": '{"cat":"IT/製造/商業/他", "size":"大規模/中規模/少額"}'},
                 {"role": "user", "content": title}
             ]
         )
         d = json.loads(response.choices[0].message.content)
-        return d.get("cat", "その他"), d.get("amount", "10万円〜")
+        return f"【{d.get('cat', '他')}】", f"[{d.get('size', '確認')}]"
     except:
-        return "その他", "10万円〜"
+        return "【他】", "[確認]"
+
+def fetch_all_new_data():
+    """取得件数を物理的に増やし、網羅性を担保する"""
+    url = "https://j-net21.smrj.go.jp/snavi/articles"
+    res = requests.get(url, timeout=30)
+    res.encoding = res.apparent_encoding
+    soup = BeautifulSoup(res.text, 'html.parser')
+    links = soup.find_all('a', href=re.compile(r'/snavi/articles/\d+'))
+    
+    unique_data = []
+    seen = set()
+    for a in links:
+        t = a.get_text(strip=True)
+        if len(t) > 10 and t not in seen:
+            h = a.get('href')
+            full_url = h if h.startswith('http') else "https://j-net21.smrj.go.jp" + h
+            unique_data.append({"title": t, "link": full_url})
+            seen.add(t)
+            if len(unique_data) >= 30: break # 30件まで拡張
+    return unique_data
 
 def generate_html(subsidies):
     list_items = ""
     for item in subsidies:
-        cat, amount = ai_analyze(item['title'])
-        icon, b_name, b_color = get_visual_meta(amount, cat)
+        cat_tag, size_tag = ai_analyze_minimal(item['title'])
         
-        # 物理的に背景色を強制するインラインCSS
+        # 色に頼らず、テキストの太字と記号だけで情報を識別させる
         list_items += f"""
-        <article style="border:1px solid #E2E8F0; padding:20px; margin-bottom:15px; border-radius:12px; background-color:#ffffff; box-shadow:0 2px 4px rgba(0,0,0,0.02); overflow:hidden;">
-            <div style="display:flex; justify-content:space-between; margin-bottom:12px; align-items:center;">
-                <span style="font-size:0.75rem; font-weight:bold; color:#2B6CB0;">{icon} {cat}</span>
-                <span style="display:inline-block; background-color:{b_color} !important; color:#ffffff !important; font-size:0.7rem; padding:4px 10px; border-radius:6px; font-weight:bold;">{amount} ({b_name})</span>
+        <article style="border-bottom:1px solid #e1e4e8; padding:20px 0; background:#ffffff;">
+            <div style="font-size:0.8rem; font-weight:bold; color:#2b6cb0; margin-bottom:8px;">
+                {cat_tag} {size_tag}
             </div>
-            <h2 style="font-size:1.05rem; margin:0 0 18px 0; color:#2D3748; line-height:1.5; font-weight:600;">{item['title']}</h2>
-            <a href="{item['link']}" target="_blank" style="display:block; text-align:center; background-color:#2B6CB0; color:#ffffff; padding:12px; text-decoration:none; border-radius:8px; font-size:0.9rem; font-weight:bold; transition: opacity 0.2s;">J-Net21で詳細を確認 →</a>
+            <h2 style="font-size:1rem; margin:0 0 15px 0; color:#1a1a1a; line-height:1.5;">{item['title']}</h2>
+            <a href="{item['link']}" target="_blank" style="display:inline-block; border:2px solid #2b6cb0; color:#2b6cb0; padding:10px 20px; text-decoration:none; border-radius:6px; font-size:0.85rem; font-weight:bold;">公式サイトを確認</a>
         </article>"""
     
-    html_content = f"""<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>AI補助金ナビ</title></head>
-<body style="max-width:500px; margin:0 auto; background-color:#F7FAFC; padding:20px; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
-    <header style="margin-bottom:30px; text-align:center;">
-        <h1 style="color:#2B6CB0; font-size:1.6rem; letter-spacing:-0.02em; margin:0;">AI補助金ナビ</h1>
-        <p style="font-size:0.8rem; color:#718096; margin-top:5px;">J-Net21新着をAIが瞬時に規模選別</p>
+    html_content = f"""<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>補助金DB</title></head>
+<body style="max-width:600px; margin:0 auto; background:#ffffff; padding:20px; font-family:sans-serif; color:#1a1a1a;">
+    <header style="border-bottom:3px solid #1a1a1a; padding-bottom:10px; margin-bottom:30px;">
+        <h1 style="font-size:1.5rem; margin:0;">AI補助金ナビ 2.0</h1>
+        <p style="font-size:0.8rem; color:#666;">J-Net21最新30件をAIが自動分類</p>
     </header>
     <main>{list_items}</main>
-    <footer style="margin-top:40px; text-align:center; font-size:0.7rem; color:#A0AEC0; padding-bottom:20px;">
-        毎日自動更新 / 出典：独立行政法人 中小企業基盤整備機構
-    </footer>
 </body></html>"""
     with open("index.html", "w", encoding="utf-8") as f: f.write(html_content)
+
+if __name__ == "__main__":
+    subsidies = fetch_all_new_data()
+    if subsidies: generate_html(subsidies)
