@@ -9,9 +9,6 @@ now = datetime.now().strftime('%Y年%m月%d日 %H:%M')
 client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 
 def ai_analyze(title):
-    """
-    OpenAI APIを用いて、要約とおすすめ度（5段階評価）を生成する。
-    """
     try:
         response = client.chat.completions.create(
             model="gpt-4o-mini",
@@ -60,20 +57,23 @@ def generate_html_and_sitemap(subsidies):
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <meta name="google-site-verification" content="qDKunZB9hZN753KuLftIbJUXeWBi3bA-HfSS-gej1KA" />
         <title>AI補助金要約ナビ | 2026年最新版</title>
-        <meta name="description" content="AIが補助金を即座に解析しおすすめ度を判定。返済不要な資金調達情報を最短3秒で把握。">
+        <meta name="description" content="AIが補助金を即座に解析しおすすめ度を判定。">
     </head>
     <body style="max-width: 600px; margin: 0 auto; background: #f1f3f4; padding: 20px; font-family: sans-serif; color: #202124;">
         <header style="text-align: center; padding: 30px 0;">
             <h1 style="font-size: 1.7rem; margin-bottom: 5px;">AI補助金要約ナビ</h1>
             <p style="color: #5f6368; font-size: 0.9rem;">最終更新：{now}</p>
         </header>
-        <main>{list_items if list_items else "<p style='text-align:center;'>現在、新規の補助金情報はありません。明日再度ご確認ください。</p>"}</main>
+        <main>{list_items if list_items else "<p style='text-align:center;'>現在、新規の補助金情報はありません。</p>"}</main>
         <footer style="text-align: center; margin-top: 50px; color: #70757a; font-size: 0.8rem;">
-            &copy; 2026 AI Subsidy Navigation.<br>AI解析は補助金受給を保証するものではありません。
+            &copy; 2026 AI Subsidy Navigation.
         </footer>
     </body>
     </html>
     """
+    # ログ出力: 書き込み直前に文字数を確認
+    print(f"HTML Content length: {len(html_content)}")
+    
     with open("index.html", "w", encoding="utf-8") as f:
         f.write(html_content)
 
@@ -89,16 +89,12 @@ def fetch_data():
     res = requests.get(url, timeout=30)
     res.encoding = res.apparent_encoding
     soup = BeautifulSoup(res.text, 'html.parser')
-    
-    articles = soup.find_all('h3')[:8]
+    articles = soup.find_all('h3')[:5] # A案：上位5件に厳選
     data = []
     for art in articles:
         link_tag = art.find('a')
         if link_tag and link_tag.get('href'):
-            data.append({
-                "title": art.get_text(strip=True),
-                "link": "https://j-net21.smrj.go.jp" + link_tag['href']
-            })
+            data.append({"title": art.get_text(strip=True), "link": "https://j-net21.smrj.go.jp" + link_tag['href']})
     return data
 
 if __name__ == "__main__":
