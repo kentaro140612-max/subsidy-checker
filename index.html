@@ -1,39 +1,11 @@
-name: Build and Deploy Subsidy Site
-
-on:
-  schedule:
-    - cron: '0 0 * * *' # 日本時間 午前9時
-  workflow_dispatch: # 手動実行用
-
-permissions:
-  contents: write
-
-jobs:
-  build-and-deploy:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0 # 全履歴を取得してPushの衝突を回避
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-
-      - name: Install dependencies
-        run: pip install requests beautifulsoup4 openai
-
-      - name: Run script to generate HTML
-        env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-        run: python main.py
-
-      - name: Commit and Push index.html
-        run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          git add index.html sitemap.xml
-          # 変更がある場合のみコミットし、強制的にmainブランチへpushする
-          git diff --quiet && git diff --staged --quiet || (git commit -m "Update index.html with latest data" && git push origin main)
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>AI補助金ナビ | 再構築中</title>
+</head>
+<body>
+    <h1>AI補助金ナビ</h1>
+    <p>現在データを更新中です。数分後にリロードしてください。</p>
+</body>
+</html>
